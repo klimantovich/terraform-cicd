@@ -1,5 +1,5 @@
 aws_region  = "us-west-2"
-environment = "prod"
+environment = "stage"
 vpc_cidr    = "10.5.0.0/16"
 
 cluster_kubernetes_version      = 1.28
@@ -26,7 +26,7 @@ argocd_chart_create_namespace = true
 argocd_chart_namespace        = "argocd"
 argocd_chart_version          = "5.46.2"
 argocd_values_path            = "./manifests/argocd-config.yaml"
-argocd_project_name           = "prod-project"
+argocd_project_name           = "stage-project"
 
 project_application_name  = "gym-management"
 project_repository        = "https://github.com/klimantovich/us-west-1-cluster"
