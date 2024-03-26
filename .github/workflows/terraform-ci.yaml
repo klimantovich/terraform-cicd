@@ -186,7 +186,18 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           pr: ${{ steps.get_pr_id.outputs.value }}
           name: tfplan
-      - name: Terraform Apply
+      - name: AWS Configure
+        run: |
+          sudo apt update
+          sudo snap install kubectl --classic
+      - name: Terraform Apply Step 1
+        run: terraform apply -target=module.dev_eks -input=false -auto-approve tfplan
+      - name: AWS Configure
+        run: |
+          sudo apt update
+          sudo snap install kubectl --classic
+          aws eks update-kubeconfig --region=us-west-2 --name=dev-eks-cluster
+      - name: Terraform Apply Step 2
         id: apply
         run: |
           echo 'apply<<EOF' >> $GITHUB_OUTPUT
