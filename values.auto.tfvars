@@ -1,6 +1,6 @@
 aws_region  = "us-west-2"
 environment = "dev"
-vpc_cidr    = "10.5.0.0/16"
+vpc_cidr    = "10.6.0.0/16"
 
 cluster_kubernetes_version      = 1.28
 cluster_endpoint_private_access = true
