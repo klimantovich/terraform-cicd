@@ -2,8 +2,8 @@ terraform {
   required_version = "~> 1.6.2"
 
   backend "gcs" {
-    bucket = "disco-freedom-409407-actions-tfstate"
-    prefix = "terraform/state/prod"
+    bucket = "argocd-k8s-project-bucket-tfstate"
+    prefix = "terraform/state"
   }
 
   required_providers {

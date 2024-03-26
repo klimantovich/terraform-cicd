@@ -1,14 +1,6 @@
+
 data "aws_eks_cluster_auth" "eks" {
   name = module.dev_eks.cluster_id
-}
-
-provider "aws" {
-  default_tags {
-    tags = {
-      Environment = var.environment
-      Owner       = "vitali"
-    }
-  }
 }
 
 provider "kubernetes" {
