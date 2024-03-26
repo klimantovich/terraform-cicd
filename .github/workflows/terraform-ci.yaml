@@ -166,10 +166,6 @@ jobs:
           aws-region: us-west-2
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-      - name: AWS Configure
-        run: |
-          sudo apt update
-          sudo snap install kubectl --classic
       - name: Terraform Init
         run: terraform init
       - name: Get a persistent value
@@ -186,6 +182,18 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           pr: ${{ steps.get_pr_id.outputs.value }}
           name: tfplan
+      - name: AWS Configure
+        run: |
+          sudo apt update
+          sudo snap install kubectl --classic
+      - name: Terraform Apply
+        id: apply
+        run: terraform apply -target=module.dev_eks -input=false -auto-approve tfplan
+      - name: AWS Configure
+        run: |
+          sudo apt update
+          sudo snap install kubectl --classic
+          aws eks update-kubeconfig --region=us-west-2 --name=dev-eks-cluster
       - name: Terraform Apply
         id: apply
         run: |
