@@ -1,0 +1,201 @@
+name: "Terraform"
+
+on:
+  pull_request:
+    branches: ["prod", "stage", "dev"]
+  push:
+    branches: ["prod", "stage", "dev"]
+
+env:
+  TF_LOG: ERROR
+  TF_INPUT: false
+  TERRAFORM_VERSION: 1.6
+  TF_IN_AUTOMATION: "True"
+
+jobs:
+  terraform_plan:
+    name: "Terraform Plan"
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    permissions:
+      contents: read
+      id-token: write
+      pull-requests: write
+    defaults:
+      run:
+        shell: bash
+        working-directory: ./
+    steps:
+      - name: Checkout
+        id: checkout
+        uses: actions/checkout@v4
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ env.TERRAFORM_VERSION }}
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-region: us-west-2
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      - name: Configure GCP credentials
+        id: gcp_auth
+        uses: google-github-actions/auth@v2
+        with:
+          create_credentials_file: "true"
+          workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
+      - name: Terraform Init
+        run: terraform init
+      - name: Terraform Validate
+        id: validate
+        run: terraform validate
+      - uses: terraform-linters/setup-tflint@v4
+        name: Setup TFLint
+        with:
+          tflint_version: v0.50.3
+      - name: Run TFLint Tests
+        id: tflint
+        run: tflint -f compact
+      - name: Run TFSec Scan Tests
+        uses: triat/terraform-security-scan@v3
+      - name: Terraform Plan
+        id: plan
+        run: terraform plan -no-color -out=tfplan
+      # Save tfplan output
+      - name: Save Artifact
+        id: save-artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: tfplan
+          path: tfplan
+      - name: Get PR id
+        id: get_pr_id
+        uses: aaimio/set-persistent-value@v1.2.1
+        with:
+          key: pr_id
+          value: ${{github.event.pull_request.number}}
+          access_token: ${{ secrets.PERSISTENT_VALUE_ACCESS_TOKEN }}
+      # Create string output of Terraform Plan
+      - name: Create String Output
+        id: tf-plan-string
+        run: |
+          TERRAFORM_PLAN=$(terraform show -no-color tfplan)
+
+          delimiter="$(openssl rand -hex 8)"
+          echo "summary<<${delimiter}" >> $GITHUB_OUTPUT
+          echo "## Terraform Plan Output" >> $GITHUB_OUTPUT
+          echo "<details><summary>Click to expand</summary>" >> $GITHUB_OUTPUT
+          echo "" >> $GITHUB_OUTPUT
+          echo '```terraform' >> $GITHUB_OUTPUT
+          echo "$TERRAFORM_PLAN" >> $GITHUB_OUTPUT
+          echo '```' >> $GITHUB_OUTPUT
+          echo "</details>" >> $GITHUB_OUTPUT
+          echo "${delimiter}" >> $GITHUB_OUTPUT
+      # Publish Terraform Plan as task summary
+      - name: Publish Terraform Plan to Task Summary
+        env:
+          SUMMARY: ${{ steps.tf-plan-string.outputs.summary }}
+        run: |
+          echo "$SUMMARY" >> $GITHUB_STEP_SUMMARY
+      # If this is a PR post the changes
+      - name: Push Terraform Output to PR
+        if: github.ref != 'refs/heads/main'
+        uses: actions/github-script@v7
+        env:
+          SUMMARY: "${{ steps.tf-plan-string.outputs.summary }}"
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const body = `${process.env.SUMMARY}`;
+            github.rest.issues.createComment({
+                issue_number: context.issue.number,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                body: body
+            })
+
+  generate_tag:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    if: github.event_name == 'push'
+    steps:
+      - name: Bump version and push tag
+        id: tag_version
+        uses: mathieudutour/github-tag-action@v6.2
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          default_bump: minor
+          default_prerelease_bump: preminor
+
+  terraform_apply:
+    name: "Terraform Apply"
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push'
+    permissions:
+      contents: read
+      id-token: write
+      pull-requests: write
+    defaults:
+      run:
+        shell: bash
+        working-directory: ./
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ env.TERRAFORM_VERSION }}
+      - name: Configure GCP credentials
+        id: gcp_auth
+        uses: google-github-actions/auth@v2
+        with:
+          create_credentials_file: "true"
+          workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-region: us-west-2
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      - name: Terraform Init
+        run: terraform init
+      - name: Get a persistent value
+        id: get_pr_id
+        uses: aaimio/get-persistent-value@v1.2.1
+        with:
+          key: pr_id
+          access_token: ${{ secrets.PERSISTENT_VALUE_ACCESS_TOKEN }}
+      # Download saved plan from artifacts
+      - name: Download artifact
+        id: download-artifact
+        uses: dawidd6/action-download-artifact@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          pr: ${{ steps.get_pr_id.outputs.value }}
+          name: tfplan
+      - name: Terraform Apply
+        id: apply
+        run: |
+          echo 'apply<<EOF' >> $GITHUB_OUTPUT
+          terraform apply -input=false -auto-approve tfplan>> $GITHUB_OUTPUT
+          echo 'EOF' >> $GITHUB_OUTPUT
+      - name: Comment Apply
+        id: comment-apply
+        uses: peter-evans/create-or-update-comment@v2
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          issue-number: ${{ steps.get_pr_id.outputs.value }}
+          body: |
+            Terraform Apply:
+            <details><summary>Click to expand</summary>
+
+            ```
+            ${{ steps.apply.outputs.apply }}
+            ```
+
+            </details>
