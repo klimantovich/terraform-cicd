@@ -3,7 +3,7 @@ terraform {
 
   backend "gcs" {
     bucket = "disco-freedom-409407-actions-tfstate"
-    prefix = "terraform/state/stage"
+    prefix = "terraform/state/dev"
   }
 
   required_providers {
