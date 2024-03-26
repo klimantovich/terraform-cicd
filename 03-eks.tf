@@ -25,3 +25,10 @@ module "dev_eks" {
   ingress_namespace        = var.ingress_namespace
 
 }
+
+resource "null_resource" "kubectl" {
+  provisioner "local-exec" {
+    command = "aws eks update-kubeconfig --region=${var.aws_region} --name=${locals.cluster_name}"
+  }
+  depends_on = [module.dev_eks]
+}

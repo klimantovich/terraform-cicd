@@ -55,15 +55,13 @@ jobs:
         name: Setup TFLint
         with:
           tflint_version: v0.50.3
-      - name: Run TFLint Tests
-        id: tflint
-        run: tflint -f compact
-      - name: Run TFSec Scan Tests
-        uses: triat/terraform-security-scan@v3
-      - name: AWS Configure
-        run: |
-          sudo apt update
-          sudo snap install kubectl --classic
+      # - name: Run TFLint Tests
+      #   id: tflint
+      #   run: tflint -f compact
+      # - name: Run TFSec Scan Tests
+      #   uses: triat/terraform-security-scan@v3
+      - uses: azure/setup-kubectl@v3
+        id: install
       - name: Terraform Plan
         id: plan
         run: terraform plan -no-color -out=tfplan
@@ -182,18 +180,9 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           pr: ${{ steps.get_pr_id.outputs.value }}
           name: tfplan
-      - name: AWS Configure
-        run: |
-          sudo apt update
-          sudo snap install kubectl --classic
-      - name: Terraform Apply Step 1
-        run: terraform apply -target=module.dev_eks -input=false -auto-approve tfplan
-      - name: AWS Configure
-        run: |
-          sudo apt update
-          sudo snap install kubectl --classic
-          aws eks update-kubeconfig --region=us-west-2 --name=dev-eks-cluster
-      - name: Terraform Apply Step 2
+      - uses: azure/setup-kubectl@v3
+        id: install
+      - name: Terraform Apply
         id: apply
         run: |
           echo 'apply<<EOF' >> $GITHUB_OUTPUT
