@@ -11,6 +11,7 @@ env:
   TF_INPUT: false
   TERRAFORM_VERSION: 1.6
   TF_IN_AUTOMATION: "True"
+  AWS_REGION: us-west-2
 
 jobs:
   terraform_plan:
@@ -36,7 +37,7 @@ jobs:
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          aws-region: us-west-2
+          aws-region: $AWS_REGION
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
       - name: Configure GCP credentials
@@ -116,19 +117,19 @@ jobs:
                 body: body
             })
 
-  # generate_tag:
-  #   runs-on: ubuntu-latest
-  #   permissions:
-  #     contents: write
-  #   if: github.event_name == 'push'
-  #   steps:
-  #     - name: Bump version and push tag
-  #       id: tag_version
-  #       uses: mathieudutour/github-tag-action@v6.2
-  #       with:
-  #         github_token: ${{ secrets.GITHUB_TOKEN }}
-  #         default_bump: minor
-  #         default_prerelease_bump: preminor
+  generate_tag:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    if: github.event_name == 'push'
+    steps:
+      - name: Bump version and push tag
+        id: tag_version
+        uses: mathieudutour/github-tag-action@v6.2
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          default_bump: minor
+          default_prerelease_bump: preminor
 
   terraform_apply:
     name: "Terraform Apply"
@@ -159,7 +160,7 @@ jobs:
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          aws-region: us-west-2
+          aws-region: $AWS_REGION
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
       - name: Terraform Init
@@ -181,41 +182,15 @@ jobs:
       - uses: azure/setup-kubectl@v3
         id: install
       - name: Set Context (if EKS cluster exists)
-        run: aws eks update-kubeconfig --region=us-west-2 --name=prod-eks-cluster
+        run: aws eks update-kubeconfig --region=$AWS_REGION --name=${GITHUB_REF##*/}
         continue-on-error: true
       - name: Set Context
         run: export KUBE_CONFIG_PATH=~/.kube/config
-      - name: test
-        run: |
-          ls -a
-          ls -a ../
-          echo "*****"
-          echo "-----"
-          stat ../tfplan
-      # - name: Terraform Apply
-      #   id: apply-init
-      #   run: terraform apply -input=false -auto-approve ../tfplan
-      #   continue-on-error: true
-      # - name: Terraform Apply (post-install steps)
-      #   id: apply
-      #   run: terraform apply -input=false -auto-approve
-      #   if: steps.apply-init.outcome == 'failure'
-      # - name: Terraform Apply
-      #   uses: nick-fields/retry@v3
-      #   with:
-      #     timeout_seconds: 15
-      #     max_attempts: 3
-      #     retry_on: error
-      #     command: terraform apply -input=false -auto-approve ../tfplan
       - name: Terraform Apply
-        run: terraform apply -input=false -auto-approve ../tfplan
+        id: apply-init
+        run: terraform apply -input=false -auto-approve ${{ github.workspace }}/tfplan
         continue-on-error: true
-      - name: Terraform Apply
-        run: terraform apply -input=false ../tfplan
-        continue-on-error: true
-      - name: Terraform Apply
-        run: terraform apply -input=false ${{ github.workspace }}/tfplan
-        continue-on-error: true
-      - name: Terraform Apply
-        run: terraform apply -input=false ${GITHUB_WORKSPACE}/tfplan
-        continue-on-error: true
+      - name: Terraform Apply (post-install steps)
+        id: apply
+        run: terraform apply -input=false -auto-approve
+        if: steps.apply-init.outcome == 'failure'
