@@ -185,11 +185,22 @@ jobs:
         continue-on-error: true
       - name: Set Context
         run: export KUBE_CONFIG_PATH=~/.kube/config
+      - name: test
+        run: |
+          ls -a
+          ls -a terraform
+      # - name: Terraform Apply
+      #   id: apply-init
+      #   run: terraform apply -input=false -auto-approve ../tfplan
+      #   continue-on-error: true
+      # - name: Terraform Apply (post-install steps)
+      #   id: apply
+      #   run: terraform apply -input=false -auto-approve
+      #   if: steps.apply-init.outcome == 'failure'
       - name: Terraform Apply
-        id: apply-init
-        run: terraform apply -input=false -auto-approve tfplan
-        continue-on-error: true
-      - name: Terraform Apply (post-install steps)
-        id: apply
-        run: terraform apply -input=false -auto-approve
-        if: steps.apply-init.outcome == 'failure'
+        uses: nick-fields/retry@v3
+        with:
+          timeout_seconds: 15
+          max_attempts: 3
+          retry_on: error
+          command: terraform apply -input=false -auto-approve ../tfplan
