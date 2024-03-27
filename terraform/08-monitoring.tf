@@ -32,102 +32,102 @@ resource "aws_iam_role_policy_attachment" "AWSXrayWriteOnlyAccess" {
 #-----------------------------------------------
 # Create Cloudwatch dashboard
 #-----------------------------------------------
-resource "aws_cloudwatch_dashboard" "app_monitoring" {
-  dashboard_name = "${var.project_application_name}-monitoring"
+# resource "aws_cloudwatch_dashboard" "app_monitoring" {
+#   dashboard_name = "${var.project_application_name}-monitoring"
 
-  dashboard_body = jsonencode({
-    "widgets" = [
-      {
-        "height" : 4,
-        "width" : 15,
-        "y" : 7,
-        "x" : 4,
-        "type" : "metric",
-        "properties" : {
-          "metrics" : [
-            ["ContainerInsights", "replicas_desired", "PodName", local.pod_name, "ClusterName", local.cluster_name, "Namespace", var.project_namespace, { "region" : var.aws_region }],
-            [".", "replicas_ready", ".", ".", ".", ".", ".", ".", { "region" : "${var.aws_region}" }],
-            [".", "status_replicas_available", ".", ".", ".", ".", ".", "."],
-            [".", "status_replicas_unavailable", ".", ".", ".", ".", ".", "."]
-          ],
-          "region" : "${var.aws_region}",
-          "stacked" : true,
-          "title" : "Application Pod Replicas Count",
-          "view" : "singleValue",
-          "period" : 300,
-          "stat" : "Minimum"
-        }
-      },
-      {
-        "type" : "metric",
-        "x" : 0,
-        "y" : 0,
-        "width" : 8,
-        "height" : 7,
-        "properties" : {
-          "metrics" : [
-            ["ContainerInsights", "pod_cpu_request", "PodName", "${var.project_application_name}-${var.project_namespace}", "ClusterName", "${local.cluster_name}", "Namespace", "${var.project_namespace}"],
-            [".", "pod_cpu_limit", ".", ".", ".", ".", ".", "."],
-            [".", "pod_cpu_utilization", ".", ".", ".", ".", ".", "."]
-          ],
-          "view" : "timeSeries",
-          "stacked" : false,
-          "region" : "${var.aws_region}",
-          "stat" : "Minimum",
-          "period" : 300,
-          "yAxis" : {
-            "left" : {
-              "min" : 0
-            }
-          },
-          "title" : "Pod CPU Utilization"
-        }
-      },
-      {
-        "type" : "metric",
-        "x" : 8,
-        "y" : 0,
-        "width" : 8,
-        "height" : 7,
-        "properties" : {
-          "view" : "timeSeries",
-          "stacked" : false,
-          "metrics" : [
-            ["ContainerInsights", "pod_memory_limit", "PodName", "${var.project_application_name}-${var.project_namespace}", "ClusterName", "${local.cluster_name}", "Namespace", "${var.project_namespace}"],
-            [".", "pod_memory_request", ".", ".", ".", ".", ".", "."],
-            [".", "pod_memory_utilization", ".", ".", ".", ".", ".", "."]
-          ],
-          "region" : "${var.aws_region}",
-          "yAxis" : {
-            "left" : {
-              "min" : 0
-            }
-          },
-          "title" : "Pod Memory Utilization"
-        }
-      },
-      {
-        "type" : "metric",
-        "x" : 16,
-        "y" : 0,
-        "width" : 8,
-        "height" : 7,
-        "properties" : {
-          "metrics" : [
-            ["ContainerInsights", "pod_network_tx_bytes", "PodName", "${var.project_application_name}-${var.project_namespace}", "ClusterName", "${local.cluster_name}", "Namespace", "${var.project_namespace}"],
-            [".", "pod_network_rx_bytes", ".", ".", ".", ".", ".", "."],
-            [".", "pod_interface_network_tx_dropped", ".", ".", ".", ".", ".", "."],
-            [".", "pod_interface_network_rx_dropped", ".", ".", ".", ".", ".", "."]
-          ],
-          "view" : "timeSeries",
-          "stacked" : false,
-          "region" : "${var.aws_region}",
-          "title" : "Pod Network Stats"
-        }
-      }
-    ]
-  })
-}
+#   dashboard_body = jsonencode({
+#     "widgets" = [
+#       {
+#         "height" : 4,
+#         "width" : 15,
+#         "y" : 7,
+#         "x" : 4,
+#         "type" : "metric",
+#         "properties" : {
+#           "metrics" : [
+#             ["ContainerInsights", "replicas_desired", "PodName", local.pod_name, "ClusterName", local.cluster_name, "Namespace", var.project_namespace, { "region" : var.aws_region }],
+#             [".", "replicas_ready", ".", ".", ".", ".", ".", ".", { "region" : "${var.aws_region}" }],
+#             [".", "status_replicas_available", ".", ".", ".", ".", ".", "."],
+#             [".", "status_replicas_unavailable", ".", ".", ".", ".", ".", "."]
+#           ],
+#           "region" : "${var.aws_region}",
+#           "stacked" : true,
+#           "title" : "Application Pod Replicas Count",
+#           "view" : "singleValue",
+#           "period" : 300,
+#           "stat" : "Minimum"
+#         }
+#       },
+#       {
+#         "type" : "metric",
+#         "x" : 0,
+#         "y" : 0,
+#         "width" : 8,
+#         "height" : 7,
+#         "properties" : {
+#           "metrics" : [
+#             ["ContainerInsights", "pod_cpu_request", "PodName", "${var.project_application_name}-${var.project_namespace}", "ClusterName", "${local.cluster_name}", "Namespace", "${var.project_namespace}"],
+#             [".", "pod_cpu_limit", ".", ".", ".", ".", ".", "."],
+#             [".", "pod_cpu_utilization", ".", ".", ".", ".", ".", "."]
+#           ],
+#           "view" : "timeSeries",
+#           "stacked" : false,
+#           "region" : "${var.aws_region}",
+#           "stat" : "Minimum",
+#           "period" : 300,
+#           "yAxis" : {
+#             "left" : {
+#               "min" : 0
+#             }
+#           },
+#           "title" : "Pod CPU Utilization"
+#         }
+#       },
+#       {
+#         "type" : "metric",
+#         "x" : 8,
+#         "y" : 0,
+#         "width" : 8,
+#         "height" : 7,
+#         "properties" : {
+#           "view" : "timeSeries",
+#           "stacked" : false,
+#           "metrics" : [
+#             ["ContainerInsights", "pod_memory_limit", "PodName", "${var.project_application_name}-${var.project_namespace}", "ClusterName", "${local.cluster_name}", "Namespace", "${var.project_namespace}"],
+#             [".", "pod_memory_request", ".", ".", ".", ".", ".", "."],
+#             [".", "pod_memory_utilization", ".", ".", ".", ".", ".", "."]
+#           ],
+#           "region" : "${var.aws_region}",
+#           "yAxis" : {
+#             "left" : {
+#               "min" : 0
+#             }
+#           },
+#           "title" : "Pod Memory Utilization"
+#         }
+#       },
+#       {
+#         "type" : "metric",
+#         "x" : 16,
+#         "y" : 0,
+#         "width" : 8,
+#         "height" : 7,
+#         "properties" : {
+#           "metrics" : [
+#             ["ContainerInsights", "pod_network_tx_bytes", "PodName", "${var.project_application_name}-${var.project_namespace}", "ClusterName", "${local.cluster_name}", "Namespace", "${var.project_namespace}"],
+#             [".", "pod_network_rx_bytes", ".", ".", ".", ".", ".", "."],
+#             [".", "pod_interface_network_tx_dropped", ".", ".", ".", ".", ".", "."],
+#             [".", "pod_interface_network_rx_dropped", ".", ".", ".", ".", ".", "."]
+#           ],
+#           "view" : "timeSeries",
+#           "stacked" : false,
+#           "region" : "${var.aws_region}",
+#           "title" : "Pod Network Stats"
+#         }
+#       }
+#     ]
+#   })
+# }
 
 #-----------------------------------------------
 # Create Cloudwatch alerts
@@ -143,7 +143,7 @@ resource "aws_cloudwatch_metric_alarm" "replicas_is_ready" {
   threshold                 = 1
   alarm_description         = <<EOF
     ArgoCD URL: 
-    https://${data.kubernetes_service.argocd_endpoint.status.0.load_balancer.0.ingress.0.hostname} 
+    https://${data.kubernetes_service.argocd_endpoint.status[0].load_balancer[0].ingress[0].hostname} 
 
     ArgoCD Password: 
     ${nonsensitive(random_password.argocd_password.result)}
