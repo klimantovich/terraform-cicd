@@ -182,7 +182,7 @@ jobs:
       - uses: azure/setup-kubectl@v3
         id: install
       - name: Set Context (if EKS cluster exists)
-        run: aws eks update-kubeconfig --region=$AWS_REGION --name=prod-eks-cluster
+        run: aws eks update-kubeconfig --region=$AWS_REGION --name=${{ github.ref_name }}-eks-cluster
         continue-on-error: true
       - name: Set Context
         run: export KUBE_CONFIG_PATH=~/.kube/config
