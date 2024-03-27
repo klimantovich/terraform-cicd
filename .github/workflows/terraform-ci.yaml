@@ -187,9 +187,12 @@ jobs:
         run: export KUBE_CONFIG_PATH=~/.kube/config
       - name: Terraform Apply
         id: apply-init
-        run: terraform apply -input=false -auto-approve tfplan
-        continue-on-error: true
-      - name: Terraform Apply (post-install steps)
-        id: apply
         run: terraform apply -input=false -auto-approve
-        if: steps.apply-init.outcome == 'failure'
+        # continue-on-error: true
+        with:
+          max_attempts: 2
+          retry_on: error
+      # - name: Terraform Apply (post-install steps)
+      #   id: apply
+      #   run: terraform apply -input=false -auto-approve
+      #   if: steps.apply-init.outcome == 'failure'
