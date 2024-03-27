@@ -65,7 +65,7 @@ jobs:
         id: install
       - name: Set Context (if EKS cluster exists)
         run: |
-          aws eks update-kubeconfig --region=$AWS_REGION --name=${{ github.ref_name }}-eks-cluster
+          aws eks update-kubeconfig --region=$AWS_REGION --name=${{ github.base_ref }}-eks-cluster
           export KUBE_CONFIG_PATH=~/.kube/config
         continue-on-error: true
       - name: Terraform Plan
