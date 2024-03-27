@@ -188,7 +188,7 @@ jobs:
       - name: test
         run: |
           ls -a
-          ls -a terraform
+          ls -a ../
       # - name: Terraform Apply
       #   id: apply-init
       #   run: terraform apply -input=false -auto-approve ../tfplan
