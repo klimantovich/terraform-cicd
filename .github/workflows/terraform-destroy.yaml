@@ -7,6 +7,7 @@ env:
   TF_INPUT: false
   TERRAFORM_VERSION: 1.6
   TF_IN_AUTOMATION: "True"
+  AWS_REGION: us-west-2
 
 jobs:
   terraform_destroy:
@@ -31,7 +32,7 @@ jobs:
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          aws-region: us-west-2
+          aws-region: ${{ env.AWS_REGION }}
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
       - name: Configure GCP credentials
@@ -43,6 +44,8 @@ jobs:
           service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
       - name: Terraform Init
         run: terraform init
+      - name: test
+        run: echo "${{ github.ref_name }}"
       - name: Terraform destroy
         id: destroy
         run: terraform destroy -auto-approve
