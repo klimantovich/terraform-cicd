@@ -116,19 +116,19 @@ jobs:
                 body: body
             })
 
-  generate_tag:
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-    if: github.event_name == 'push'
-    steps:
-      - name: Bump version and push tag
-        id: tag_version
-        uses: mathieudutour/github-tag-action@v6.2
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          default_bump: minor
-          default_prerelease_bump: preminor
+  # generate_tag:
+  #   runs-on: ubuntu-latest
+  #   permissions:
+  #     contents: write
+  #   if: github.event_name == 'push'
+  #   steps:
+  #     - name: Bump version and push tag
+  #       id: tag_version
+  #       uses: mathieudutour/github-tag-action@v6.2
+  #       with:
+  #         github_token: ${{ secrets.GITHUB_TOKEN }}
+  #         default_bump: minor
+  #         default_prerelease_bump: preminor
 
   terraform_apply:
     name: "Terraform Apply"
@@ -192,14 +192,6 @@ jobs:
           echo "*****"
           echo "-----"
           stat ../tfplan
-          echo "-----"
-          stat ./tfplan
-          echo "-----"
-          stat tfplan
-          echo "-----"
-          stat ./terraform/tfplan
-          echo "-----"
-          ls ../tfplan
       # - name: Terraform Apply
       #   id: apply-init
       #   run: terraform apply -input=false -auto-approve ../tfplan
@@ -208,10 +200,22 @@ jobs:
       #   id: apply
       #   run: terraform apply -input=false -auto-approve
       #   if: steps.apply-init.outcome == 'failure'
+      # - name: Terraform Apply
+      #   uses: nick-fields/retry@v3
+      #   with:
+      #     timeout_seconds: 15
+      #     max_attempts: 3
+      #     retry_on: error
+      #     command: terraform apply -input=false -auto-approve ../tfplan
       - name: Terraform Apply
-        uses: nick-fields/retry@v3
-        with:
-          timeout_seconds: 15
-          max_attempts: 3
-          retry_on: error
-          command: terraform apply -input=false -auto-approve ../tfplan
+        run: terraform apply -input=false -auto-approve ../tfplan
+        continue-on-error: true
+      - name: Terraform Apply
+        run: terraform apply -input=false ../tfplan
+        continue-on-error: true
+      - name: Terraform Apply
+        run: terraform apply -input=false ${{ github.workspace }}/tfplan
+        continue-on-error: true
+      - name: Terraform Apply
+        run: terraform apply -input=false ${GITHUB_WORKSPACE}/tfplan
+        continue-on-error: true
