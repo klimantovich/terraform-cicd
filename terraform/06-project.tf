@@ -84,6 +84,7 @@ resource "kubectl_manifest" "argocd_application" {
   depends_on = [helm_release.argocd]
 }
 
+
 #-----------------------------------------------
 # Generate SSL certs for ingress
 #-----------------------------------------------

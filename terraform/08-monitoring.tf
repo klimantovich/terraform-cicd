@@ -209,9 +209,9 @@ resource "aws_lambda_function" "tg_notifier" {
   role          = aws_iam_role.iam_for_lambda.arn
 
   description      = "Lambda function which receives events from CloudWatch -> SNS service, and POST it to telegram bot API"
-  filename         = "${path.module}/${var.telegram_bot_app_file}"
+  filename         = "../${var.telegram_bot_app_file}"
   runtime          = "python3.12"
-  source_code_hash = filebase64sha256("${path.module}/${var.telegram_bot_app_file}")
+  source_code_hash = filebase64sha256("../${var.telegram_bot_app_file}")
   handler          = "lambda_function.lambda_handler"
 
   environment {
