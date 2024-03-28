@@ -41,4 +41,4 @@ telegram_bot_chat_id  = "6325914269"
 
 db_name      = "Gym"
 db_user      = "root"
-httpAuthUser = "user"
+httpAuthUser = "user11"
