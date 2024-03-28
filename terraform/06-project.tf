@@ -54,8 +54,8 @@ resource "kubectl_manifest" "argocd_application" {
         path: ${var.project_repository_path}
         helm:
           valueFiles:
-            - "../../values/gymmanagement-dev.yaml"
-            - "../../values/gymmanagement-dev-image.yaml"
+            - "../../values/gymmanagement-${var.environment}.yaml"
+            - "../../values/gymmanagement-${var.environment}-image.yaml"
           valuesObject:
             ingress:
               tls:
