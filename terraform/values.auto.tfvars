@@ -25,7 +25,7 @@ argocd_repository             = "https://argoproj.github.io/argo-helm"
 argocd_chart_create_namespace = true
 argocd_chart_namespace        = "argocd"
 argocd_chart_version          = "5.46.2"
-argocd_values_path            = "./manifests/argocd-config.yaml"
+argocd_values_path            = "../manifests/argocd-config.yaml"
 argocd_project_name           = "prod-project"
 
 project_application_name  = "gym-management"
@@ -41,4 +41,4 @@ telegram_bot_chat_id  = "6325914269"
 
 db_name      = "Gym"
 db_user      = "root"
-httpAuthUser = "vitali"
+httpAuthUser = "user"

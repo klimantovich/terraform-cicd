@@ -54,8 +54,8 @@ resource "kubectl_manifest" "argocd_application" {
         path: ${var.project_repository_path}
         helm:
           valueFiles:
-            - "../../values/gymmanagement-${var.environment}.yaml"
-            - "../../values/gymmanagement-${var.environment}-image.yaml"
+            - "../../values/gymmanagement-dev.yaml"
+            - "../../values/gymmanagement-dev-image.yaml"
           valuesObject:
             ingress:
               tls:
@@ -83,6 +83,7 @@ resource "kubectl_manifest" "argocd_application" {
 
   depends_on = [helm_release.argocd]
 }
+
 
 #-----------------------------------------------
 # Generate SSL certs for ingress

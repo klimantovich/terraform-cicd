@@ -12,7 +12,7 @@ module "dev_db" {
   security_group_vpc_id         = module.dev_network.vpc_id
   security_group_db_port        = var.security_group_db_port
   db_ingress_security_group_ids = [module.dev_eks.cluster_security_group_id] # Acess from EKS cluster
-  db_egress_cidr_blocks         = [var.vpc_cidr]                             # Outbound traffic allowed only to in-VPC resources
+  db_egress_cidr_blocks         = [var.vpc_cidr]
 
   # instance variables
   db_allocated_storage   = var.db_allocated_storage
